@@ -1,7 +1,7 @@
 name: Build C++ EXE
 
 on:
-  workflow_dispatch: # Ermöglicht den manuellen Start per Knopfdruck
+  workflow_dispatch:
 
 jobs:
   build:
@@ -14,11 +14,22 @@ jobs:
     - name: Visual Studio Build Tools einrichten
       uses: microsoft/setup-msbuild@v2
 
-    - name: Projekt kompilieren (Release x64)
-      run: msbuild Universal-No-Recoil.sln /p:Configuration=Release /p:Platform=x64
+    - name: Projekt kompilieren (Automatische Suche)
+      run: |
+        $slnFile = Get-ChildItem -Recurse -Filter *.sln | Select-Object -First 1
+        if ($slnFile) {
+            Write-Host "Projektdatei gefunden: $($slnFile.FullName)"
+            msbuild $($slnFile.FullName) /p:Configuration=Release /p:Platform=x64
+        } else {
+            Write-Error "Keine .sln Datei im Repository gefunden!"
+            exit 1
+        }
+      shell: powershell
 
     - name: EXE als Download bereitstellen
       uses: actions/upload-artifact@v4
       with:
         name: Universal-No-Recoil-EXE
-        path: x64/Release/
+        path: |
+          **/Release/*.exe
+          **/x64/Release/*.exe
