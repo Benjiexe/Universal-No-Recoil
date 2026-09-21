@@ -11,25 +11,16 @@ jobs:
     - name: Code auschecken
       uses: actions/checkout@v4
 
-    - name: Visual Studio Build Tools einrichten
-      uses: microsoft/setup-msbuild@v2
+    - name: CMake konfigurieren
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
-    - name: Projekt kompilieren (Automatische Suche)
-      run: |
-        $slnFile = Get-ChildItem -Recurse -Filter *.sln | Select-Object -First 1
-        if ($slnFile) {
-            Write-Host "Projektdatei gefunden: $($slnFile.FullName)"
-            msbuild $($slnFile.FullName) /p:Configuration=Release /p:Platform=x64
-        } else {
-            Write-Error "Keine .sln Datei im Repository gefunden!"
-            exit 1
-        }
-      shell: powershell
+    - name: Projekt kompilieren (Release)
+      run: cmake --build build --config Release
 
     - name: EXE als Download bereitstellen
       uses: actions/upload-artifact@v4
       with:
         name: Universal-No-Recoil-EXE
         path: |
-          **/Release/*.exe
-          **/x64/Release/*.exe
+          build/Release/*.exe
+          build/*.exe
