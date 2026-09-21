@@ -1,32 +1,24 @@
-name: CI
+name: Build C++ EXE
 
 on:
-    push:
-    pull_request:
+  workflow_dispatch: # Ermöglicht den manuellen Start per Knopfdruck
 
 jobs:
-    application:
-        runs-on: windows-2025-vs2026
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v6
+  build:
+    runs-on: windows-latest
 
-            - name: Build the Project with CMake
-              run: |
-                  cmake -S . -B build -G "Visual Studio 18 2026" -A x64
-                  cmake --build build --config Release --target UNRC
+    steps:
+    - name: Code auschecken
+      uses: actions/checkout@v4
 
-            - name: Strip symbols from executable
-              run: strip build/Release/UNRC.exe
+    - name: Visual Studio Build Tools einrichten
+      uses: microsoft/setup-msbuild@v2
 
-            - name: Prepare release folder
-              run: |
-                  mkdir UniversalNoRecoil
-                  copy build\Config.toml UniversalNoRecoil\
-                  copy build\Release\UNRC.exe UniversalNoRecoil\
+    - name: Projekt kompilieren (Release x64)
+      run: msbuild Universal-No-Recoil.sln /p:Configuration=Release /p:Platform=x64
 
-            - name: Upload artifact
-              uses: actions/upload-artifact@v6
-              with:
-                  name: UniversalNoRecoil
-                  path: UniversalNoRecoil
+    - name: EXE als Download bereitstellen
+      uses: actions/upload-artifact@v4
+      with:
+        name: Universal-No-Recoil-EXE
+        path: x64/Release/
